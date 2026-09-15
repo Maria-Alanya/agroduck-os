@@ -15,6 +15,8 @@ export default function SistemaTradicional() {
   // 1. Estados de la aplicación
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
+  // Definimos la URL de la API: si está en la nube usará Vercel/Render, si estás en tu PC usará localhost
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   // 2. Si NO está autenticado, mostramos la pantalla de Login
   if (!isAuthenticated) {
@@ -512,7 +514,7 @@ function DashboardProAdministrativo() {
   // 2. Función para cargar los lotes desde FastAPI
   const cargarLotes = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/lotes');
+      const response = await fetch(`${API_URL}/api/lotes`);
       const data = await response.json();
       if (data.success) {
         setListaLotes(data.lotes);
@@ -542,7 +544,7 @@ function DashboardProAdministrativo() {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/lotes', {
+      const response = await fetch(`${API_URL}/api/lotes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -553,7 +555,7 @@ function DashboardProAdministrativo() {
       if (response.ok && data.success) {
         alert('¡Lote registrado correctamente en el sistema!');
         setLoadingLote(false);
-        cargarLotes(); // Recargamos la tabla automáticamente al guardar
+        cargarLotes(); 
       } else {
         alert(`Error al registrar lote: ${data.detail || 'Verifique los datos.'}`);
         setLoadingLote(false);
@@ -1253,7 +1255,7 @@ function EclosionAdministrativo() {
     const cargarDatosSelects = async () => {
       try {
         // Cargar Lotes
-        const resLotes = await fetch('http://localhost:8000/api/lotes');
+        const resLotes = await fetch(`${API_URL}/api/lotes`);
         const dataLotes = await resLotes.json();
         if (dataLotes.success && dataLotes.lotes.length > 0) {
           setLotesDisponibles(dataLotes.lotes);
@@ -1261,7 +1263,7 @@ function EclosionAdministrativo() {
         }
 
         // Cargar Nidos
-        const resNidos = await fetch('http://localhost:8000/api/nidos');
+        const resNidos = await fetch(`${API_URL}/api/nidos`);
         const dataNidos = await resNidos.json();
         if (dataNidos.success && dataNidos.nidos.length > 0) {
           setNidosDisponibles(dataNidos.nidos);
@@ -1290,7 +1292,7 @@ function EclosionAdministrativo() {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/nidos', {
+      const response = await fetch(`${API_URL}/api/nidos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -1302,8 +1304,7 @@ function EclosionAdministrativo() {
         alert('¡Nido registrado y vinculado al lote exitosamente!');
         setLoadingNido(false);
         
-        // Recargamos la lista de nidos para el segundo formulario
-        const resNidos = await fetch('http://localhost:8000/api/nidos');
+        const resNidos = await fetch(`${API_URL}/api/nidos`);
         const dataNidos = await resNidos.json();
         if (dataNidos.success) {
           setNidosDisponibles(dataNidos.nidos);
@@ -1335,7 +1336,7 @@ function EclosionAdministrativo() {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/registros-incubacion', {
+      const response = await fetch(`${API_URL}/api/registros-incubacion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -1573,9 +1574,8 @@ function AuthScreen({ onLogin }) {
     setErrorMsg('');
     setLoading(true);
 
-    const url = isLogin ? 'http://localhost:8000/api/login' : 'http://localhost:8000/api/registro';
+    const url = isLogin ? `${API_URL}/api/login` : `${API_URL}/api/registro`;
     
-    // Adaptamos el cuerpo según lo que pide el backend para cada caso
     const payload = isLogin 
       ? { correo, contrasena } 
       : { nombre_usuario: nombreUsuario, correo, contrasena, datos_contacto: datosContacto };
@@ -1593,12 +1593,10 @@ function AuthScreen({ onLogin }) {
 
       if (response.ok && data.success) {
         if (!isLogin) {
-          // Si se acaba de registrar, lo mandamos al login automáticamente
           alert('¡Registro exitoso! Ahora inicie sesión.');
           setIsLogin(true);
           setLoading(false);
         } else {
-          // Si hizo login correctamente, entramos al sistema
           onLogin();
         }
       } else {
